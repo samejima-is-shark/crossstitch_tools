@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cross Stitch Tools</title>
+  <style>
+    :root {
+      --bg: #f6efe7;
+      --panel: rgba(255, 252, 247, 0.94);
+      --ink: #2f2924;
+      --muted: #6d6257;
+      --line: #decfbe;
+      --accent: #b4533f;
+      --accent2: #244b5a;
+      --shadow: 0 20px 40px rgba(75, 55, 40, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Yu Gothic UI", "Hiragino Sans", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(180, 83, 63, 0.15), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(36, 75, 90, 0.18), transparent 24%),
+        linear-gradient(180deg, #faf4ee 0%, #eee4d8 100%);
+    }
+
+    main {
+      width: min(980px, calc(100vw - 32px));
+      margin: 32px auto;
+    }
+
+    .hero, .card {
+      background: var(--panel);
+      border: 1px solid rgba(98, 76, 58, 0.12);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero {
+      padding: 28px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.05;
+      letter-spacing: 0.03em;
+    }
+
+    .lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      max-width: 56ch;
+    }
+
+    .grid {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      padding: 22px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(36, 75, 90, 0.1);
+      color: var(--accent2);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 1.35rem;
+    }
+
+    .card p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 16px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 700;
+      color: white;
+      background: var(--accent);
+    }
+
+    .link.alt {
+      background: var(--accent2);
+    }
+
+    .note {
+      margin-top: 18px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px dashed var(--line);
+      color: var(--muted);
+      line-height: 1.7;
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    @media (max-width: 760px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <h1>Cross Stitch Tools</h1>
+      <p class="lead">クロスステッチ図案づくり用のツールを1つのリポジトリにまとめた入口ページです。ドット絵向けの基本版と、通常画像向けの減色あり版をここから選べます。</p>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <div class="eyebrow">Dot Art</div>
+        <h2>ドット絵向け</h2>
+        <p>1px を 1ドットとして扱う基本版です。すでに整ったピクセルアートや小さめの図案向けです。</p>
+        <a class="link" href="./dot/">開く</a>
+      </article>
+
+      <article class="card">
+        <div class="eyebrow">Photo / Illustration</div>
+        <h2>通常画像向け</h2>
+        <p>減色ありの版です。イラストや写真をクロスステッチ向けに落とし込みたいときに向いています。</p>
+        <a class="link alt" href="./photo/">開く</a>
+      </article>
+    </section>
+
+    <div class="note">
+      GitHub Pages ではこのフォルダ全体をそのまま公開できます。トップページから各ツールへ移動し、画像をローカルから選択またはドラッグ＆ドロップして使えます。
+    </div>
+  </main>
+</body>
+</html>

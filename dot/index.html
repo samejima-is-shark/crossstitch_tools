@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>クロスステッチ図案メーカー</title>
+  <style>
+    :root {
+      --bg: #f4efe7;
+      --panel: rgba(255, 252, 247, 0.92);
+      --ink: #2f2924;
+      --muted: #73685d;
+      --line: #d8cbbd;
+      --accent: #b4533f;
+      --accent-2: #244b5a;
+      --shadow: 0 20px 40px rgba(75, 55, 40, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Yu Gothic UI", "Hiragino Sans", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(180, 83, 63, 0.14), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(36, 75, 90, 0.18), transparent 28%),
+        linear-gradient(180deg, #f8f2eb 0%, #eee4d8 100%);
+      min-height: 100vh;
+    }
+
+    .shell {
+      width: min(1280px, calc(100vw - 32px));
+      margin: 24px auto;
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(98, 76, 58, 0.12);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .controls {
+      padding: 24px;
+      position: sticky;
+      top: 20px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 1.8rem;
+      line-height: 1.1;
+      letter-spacing: 0.04em;
+    }
+
+    .lead {
+      margin: 0 0 20px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .group {
+      margin-top: 18px;
+    }
+
+    .group label,
+    .group .label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    input[type="file"],
+    input[type="number"],
+    input[type="text"],
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      color: var(--ink);
+      padding: 11px 12px;
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 72px;
+      resize: vertical;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .value {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .buttons {
+      display: grid;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 16px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      transform: none;
+      opacity: 0.45;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #fff8f4;
+    }
+
+    .secondary {
+      background: var(--accent-2);
+      color: #eef8fb;
+    }
+
+    .ghost {
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .preview {
+      padding: 18px;
+    }
+
+    .preview-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: end;
+      padding: 8px 8px 16px;
+    }
+
+    .preview-head h2 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: right;
+      line-height: 1.5;
+    }
+
+    .canvas-wrap {
+      overflow: auto;
+      border-radius: 18px;
+      background:
+        linear-gradient(45deg, rgba(0, 0, 0, 0.028) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.028) 75%),
+        linear-gradient(45deg, rgba(0, 0, 0, 0.028) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.028) 75%);
+      background-size: 18px 18px;
+      background-position: 0 0, 9px 9px;
+      padding: 14px;
+      border: 1px solid rgba(98, 76, 58, 0.08);
+      min-height: 70vh;
+    }
+
+    canvas {
+      display: block;
+      background: #fff;
+      max-width: 100%;
+      height: auto;
+      box-shadow: 0 14px 30px rgba(50, 40, 30, 0.12);
+    }
+
+    .tips {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px dashed var(--line);
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    .dropzone {
+      border: 2px dashed var(--line);
+      border-radius: 18px;
+      padding: 18px 14px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.55);
+      color: var(--muted);
+      transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+    }
+
+    .dropzone strong {
+      display: block;
+      color: var(--ink);
+      margin-bottom: 6px;
+      font-size: 0.96rem;
+    }
+
+    .dropzone.active {
+      border-color: var(--accent);
+      background: rgba(255, 248, 244, 0.95);
+      transform: scale(1.01);
+    }
+
+    .legend-editor {
+      margin-top: 18px;
+      max-height: 280px;
+      overflow: auto;
+      border: 1px solid rgba(98, 76, 58, 0.1);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.75);
+      padding: 10px;
+    }
+
+    .legend-empty {
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 10px;
+    }
+
+    .legend-row {
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      padding: 12px;
+      border-radius: 14px;
+    }
+
+    .legend-row + .legend-row {
+      margin-top: 6px;
+    }
+
+    .legend-row:nth-child(odd) {
+      background: rgba(244, 239, 231, 0.72);
+    }
+
+    .swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 0, 0, 0.18);
+    }
+
+    .legend-info {
+      min-width: 0;
+    }
+
+    .legend-number {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 0.9rem;
+      color: var(--ink);
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .legend-meta {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .legend-thread {
+      margin-top: 6px;
+      color: #173946;
+      font-size: 0.86rem;
+      line-height: 1.55;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 34px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #315a6b 0%, #214352 100%);
+      color: #f2fbff;
+      font-size: 0.78rem;
+      letter-spacing: 0.04em;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .chip--soft {
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid rgba(98, 76, 58, 0.16);
+      box-shadow: none;
+    }
+
+    .legend-row input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--ink);
+      padding: 8px 10px;
+      font: inherit;
+    }
+
+    @media (max-width: 960px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        position: static;
+      }
+
+      .canvas-wrap {
+        min-height: 50vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="panel controls">
+      <h1>クロスステッチ図案メーカー</h1>
+      <p class="lead">1px を 1ドットとして扱い、そのまま拡大してグリッド線と色番号を重ねます。画像を読み込むと自動で図案化されます。</p>
+
+      <div class="group">
+        <label for="imageInput">画像を選ぶ</label>
+        <input id="imageInput" type="file" accept="image/png,image/*">
+      </div>
+
+      <div id="dropzone" class="group dropzone">
+        <strong>ここに画像をドラッグ＆ドロップ</strong>
+        PNG でも他の画像でも OK です
+      </div>
+
+      <div class="group">
+        <label for="cellSize">マスの拡大サイズ</label>
+        <input id="cellSize" type="range" min="10" max="36" step="1" value="18">
+        <div class="value"><span id="cellSizeValue">18</span> px</div>
+      </div>
+
+      <div class="group">
+        <label for="majorGridEvery">太線の間隔</label>
+        <input id="majorGridEvery" type="number" min="2" max="20" step="1" value="10">
+      </div>
+
+      <div class="group">
+        <label for="symbolMode">マスの表示</label>
+        <select id="symbolMode">
+          <option value="number">数字</option>
+          <option value="symbol">記号</option>
+          <option value="both">数字 + 記号</option>
+        </select>
+      </div>
+
+      <div class="group">
+        <label for="threadBrand">刺繍糸の対応表</label>
+        <select id="threadBrand">
+          <option value="none">表示しない</option>
+          <option value="DMC">DMC</option>
+          <option value="COSMO">COSMO</option>
+          <option value="both">DMC + COSMO</option>
+        </select>
+      </div>
+
+      <div class="group">
+        <label for="showColorKey">Color Key</label>
+        <select id="showColorKey">
+          <option value="show">表示する</option>
+          <option value="hide">表示しない</option>
+        </select>
+      </div>
+
+      <div class="group">
+        <label for="chartTitle">図案タイトル</label>
+        <input id="chartTitle" type="text" value="Cross Stitch Chart">
+      </div>
+
+      <div class="buttons">
+        <button id="downloadButton" class="secondary" disabled>PNG を保存</button>
+        <button id="printButton" class="ghost" disabled>印刷 / PDF保存</button>
+      </div>
+
+      <div class="tips">
+        ヒント: 小さいドット絵ほどきれいに仕上がります。<br>
+        色番号は出現数の多い順に 1, 2, 3... と自動で振られます。<br>
+        PDF はブラウザの印刷機能でそのまま保存できます。
+      </div>
+    </section>
+
+    <section class="panel preview">
+      <div class="preview-head">
+        <h2>プレビュー</h2>
+        <div id="status" class="status">画像を読み込むとここにサイズ情報が出ます。</div>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="chartCanvas"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <script src="./thread_tables.js"></script>
+  <script>
+    const PADDING = 24;
+    const LEGEND_WIDTH = 420;
+    const LEGEND_ROW_HEIGHT = 64;
+    const TITLE_SPACE = 30;
+
+    const imageInput = document.getElementById("imageInput");
+    const dropzone = document.getElementById("dropzone");
+    const cellSizeInput = document.getElementById("cellSize");
+    const cellSizeValue = document.getElementById("cellSizeValue");
+    const majorGridEveryInput = document.getElementById("majorGridEvery");
+    const symbolModeInput = document.getElementById("symbolMode");
+    const chartTitleInput = document.getElementById("chartTitle");
+    const threadBrandInput = document.getElementById("threadBrand");
+    const showColorKeyInput = document.getElementById("showColorKey");
+    const downloadButton = document.getElementById("downloadButton");
+    const printButton = document.getElementById("printButton");
+    const status = document.getElementById("status");
+    const canvas = document.getElementById("chartCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const SYMBOLS = ["@", "#", "%", "&", "*", "+", "=", "X", "O", "A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "M"];
+    const THREAD_TABLES = window.THREAD_TABLES || {};
+
+    let loadedImage = null;
+    let loadedFileName = "chart";
+    let currentChartData = null;
+
+    cellSizeInput.addEventListener("input", () => {
+      cellSizeValue.textContent = cellSizeInput.value;
+      if (loadedImage) renderChart();
+    });
+
+    majorGridEveryInput.addEventListener("input", () => {
+      if (loadedImage) renderChart();
+    });
+
+    symbolModeInput.addEventListener("change", () => {
+      if (loadedImage) renderChart();
+    });
+
+    chartTitleInput.addEventListener("input", () => {
+      if (loadedImage) renderChart();
+    });
+
+    threadBrandInput.addEventListener("change", () => {
+      if (loadedImage) renderChart();
+    });
+
+    showColorKeyInput.addEventListener("change", () => {
+      if (loadedImage) renderChart();
+    });
+
+    imageInput.addEventListener("change", async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      await loadSelectedFile(file);
+    });
+
+    downloadButton.addEventListener("click", () => {
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL("image/png");
+      link.download = `${loadedFileName}_crossstitch_chart.png`;
+      link.click();
+    });
+
+    printButton.addEventListener("click", () => {
+      if (!currentChartData) return;
+      openPrintView();
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      dropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dropzone.classList.add("active");
+      });
+    });
+
+    ["dragleave", "dragend", "drop"].forEach((eventName) => {
+      dropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        if (eventName !== "drop") dropzone.classList.remove("active");
+      });
+    });
+
+    dropzone.addEventListener("drop", async (event) => {
+      dropzone.classList.remove("active");
+      const file = event.dataTransfer?.files?.[0];
+      if (!file) return;
+      await loadSelectedFile(file);
+    });
+
+    async function loadSelectedFile(fileOrBlob, fallbackName = "chart") {
+      loadedFileName = "name" in fileOrBlob && fileOrBlob.name
+        ? fileOrBlob.name.replace(/\.[^.]+$/, "")
+        : fallbackName;
+      loadedImage = await fileToImage(fileOrBlob);
+      currentChartData = null;
+      renderChart(`${loadedFileName} を読み込みました。`);
+    }
+
+    function fileToImage(fileOrBlob) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(fileOrBlob);
+        const image = new Image();
+        image.onload = () => {
+          URL.revokeObjectURL(url);
+          resolve(image);
+        };
+        image.onerror = () => {
+          URL.revokeObjectURL(url);
+          reject(new Error("image load failed"));
+        };
+        image.src = url;
+      });
+    }
+
+    function renderChart(feedbackMessage = "") {
+      if (!loadedImage) return;
+
+      const width = loadedImage.width;
+      const height = loadedImage.height;
+      const cellSize = Number(cellSizeInput.value);
+      const majorGridEvery = Math.max(2, Number(majorGridEveryInput.value) || 10);
+
+      const sourceCanvas = document.createElement("canvas");
+      sourceCanvas.width = width;
+      sourceCanvas.height = height;
+      const sourceCtx = sourceCanvas.getContext("2d", { willReadFrequently: true });
+      sourceCtx.clearRect(0, 0, width, height);
+      sourceCtx.drawImage(loadedImage, 0, 0);
+
+      const imageData = sourceCtx.getImageData(0, 0, width, height).data;
+      const colorCounts = new Map();
+      const pixels = [];
+
+      for (let y = 0; y < height; y += 1) {
+        const row = [];
+        for (let x = 0; x < width; x += 1) {
+          const index = (y * width + x) * 4;
+          const color = [
+            imageData[index],
+            imageData[index + 1],
+            imageData[index + 2],
+            imageData[index + 3],
+          ];
+          row.push(color);
+          if (color[3] > 0) {
+            const key = color.join(",");
+            colorCounts.set(key, (colorCounts.get(key) || 0) + 1);
+          }
+        }
+        pixels.push(row);
+      }
+
+      const stitchColors = [...colorCounts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([key]) => key.split(",").map(Number));
+
+      const colorNumbers = new Map(stitchColors.map((color, i) => [color.join(","), i + 1]));
+      currentChartData = { width, height, stitchColors, colorCounts };
+      const symbolMode = symbolModeInput.value;
+      const threadBrand = threadBrandInput.value;
+      const showColorKey = showColorKeyInput.value === "show";
+      const chartTop = PADDING + TITLE_SPACE;
+      const matches = buildThreadMatches(stitchColors, threadBrand);
+
+      const chartWidth = width * cellSize + PADDING * 2;
+      const chartHeight = height * cellSize + chartTop + PADDING;
+      const legendHeight = showColorKey ? chartTop + PADDING + 20 + stitchColors.length * LEGEND_ROW_HEIGHT : chartHeight;
+      canvas.width = chartWidth + (showColorKey ? LEGEND_WIDTH : 0);
+      canvas.height = Math.max(chartHeight, legendHeight);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.textBaseline = "middle";
+      ctx.textAlign = "center";
+
+      ctx.textBaseline = "alphabetic";
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#201c19";
+      ctx.font = '700 22px "Yu Gothic UI", sans-serif';
+      ctx.fillText(chartTitleInput.value || "Cross Stitch Chart", PADDING, PADDING + 18);
+
+      const numberFontSize = Math.max(9, Math.floor(cellSize * 0.48));
+      ctx.font = `${numberFontSize}px "Yu Gothic UI", sans-serif`;
+      ctx.textBaseline = "middle";
+      ctx.textAlign = "center";
+
+      for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+          const color = pixels[y][x];
+          const left = PADDING + x * cellSize;
+          const top = chartTop + y * cellSize;
+
+          if (color[3] > 0) {
+            ctx.fillStyle = rgba(color);
+            ctx.fillRect(left, top, cellSize, cellSize);
+
+            const key = color.join(",");
+            const numberLabel = String(colorNumbers.get(key));
+            const symbolLabel = symbolForNumber(colorNumbers.get(key));
+            const label = symbolMode === "symbol"
+              ? symbolLabel
+              : symbolMode === "both"
+                ? `${numberLabel}${symbolLabel}`
+                : numberLabel;
+            ctx.fillStyle = bestTextColor(color);
+            ctx.fillText(label, left + cellSize / 2, top + cellSize / 2 + 0.5);
+          } else {
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(left, top, cellSize, cellSize);
+          }
+        }
+      }
+
+      for (let x = 0; x <= width; x += 1) {
+        const xpos = PADDING + x * cellSize;
+        const isMajor = x % majorGridEvery === 0;
+        ctx.beginPath();
+        ctx.moveTo(xpos, chartTop);
+        ctx.lineTo(xpos, chartTop + height * cellSize);
+        ctx.lineWidth = isMajor ? 2 : 1;
+        ctx.strokeStyle = isMajor ? "#6e6e6e" : "#cfcfcf";
+        ctx.stroke();
+      }
+
+      for (let y = 0; y <= height; y += 1) {
+        const ypos = PADDING + y * cellSize;
+        const adjustedY = chartTop + y * cellSize;
+        const isMajor = y % majorGridEvery === 0;
+        ctx.beginPath();
+        ctx.moveTo(PADDING, adjustedY);
+        ctx.lineTo(PADDING + width * cellSize, adjustedY);
+        ctx.lineWidth = isMajor ? 2 : 1;
+        ctx.strokeStyle = isMajor ? "#6e6e6e" : "#cfcfcf";
+        ctx.stroke();
+      }
+
+      if (showColorKey) {
+        const legendLeft = chartWidth + 24;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillStyle = "#201c19";
+        ctx.font = '700 20px "Yu Gothic UI", sans-serif';
+        ctx.fillText("Color Key", legendLeft, PADDING + 18);
+
+        ctx.font = '14px "Yu Gothic UI", sans-serif';
+        stitchColors.forEach((color, index) => {
+          const rowTop = chartTop + 12 + index * LEGEND_ROW_HEIGHT;
+          const key = color.join(",");
+          const threadLabel = matches.get(key)?.inline || "";
+          const hex = toHex(color);
+          const rowHeight = 50;
+
+          drawRoundedRect(ctx, legendLeft - 8, rowTop - 6, LEGEND_WIDTH - 28, rowHeight, 12, "#faf7f2", "#dfd5ca");
+          ctx.fillStyle = rgba(color);
+          drawRoundedRect(ctx, legendLeft + 4, rowTop + 4, 28, 28, 8, rgba(color), "#666666");
+
+          const modeMarker = symbolMode === "number"
+            ? String(index + 1)
+            : symbolMode === "symbol"
+              ? symbolForNumber(index + 1)
+              : `${index + 1}${symbolForNumber(index + 1)}`;
+          drawRoundedRect(ctx, legendLeft + 42, rowTop + 2, 38, 22, 11, "#244b5a");
+          ctx.fillStyle = "#f2fbff";
+          ctx.font = '700 12px "Yu Gothic UI", sans-serif';
+          ctx.textAlign = "center";
+          ctx.fillText(modeMarker, legendLeft + 61, rowTop + 17);
+          ctx.textAlign = "left";
+
+          ctx.fillStyle = "#2f2924";
+          ctx.font = '700 13px "Yu Gothic UI", sans-serif';
+          ctx.fillText(`${hex}  x${colorCounts.get(key)}`, legendLeft + 92, rowTop + 17);
+
+          if (threadLabel) {
+            ctx.fillStyle = "#173946";
+            ctx.font = '700 13px "Yu Gothic UI", sans-serif';
+            ctx.fillText(threadLabel, legendLeft + 42, rowTop + 39);
+          }
+        });
+      }
+
+      downloadButton.disabled = false;
+      printButton.disabled = false;
+      const threadStatus = threadBrand === "none" ? "糸番号: なし" : `糸番号: ${threadBrand} 上位3件`;
+      const colorKeyStatus = showColorKey ? "Color Key: 表示" : "Color Key: 非表示";
+      const baseStatus = `${width} x ${height} px / ${stitchColors.length} 色<br>1ドット = ${cellSize}px / 表示: ${symbolModeLabel(symbolMode)} / ${threadStatus} / ${colorKeyStatus}`;
+      status.innerHTML = feedbackMessage ? `${feedbackMessage}<br>${baseStatus}` : baseStatus;
+    }
+
+    function rgba([r, g, b, a]) {
+      return `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+    }
+
+    function toHex([r, g, b]) {
+      return `#${[r, g, b].map((value) => value.toString(16).padStart(2, "0").toUpperCase()).join("")}`;
+    }
+
+    function bestTextColor([r, g, b]) {
+      const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+      return luminance < 150 ? "#ffffff" : "#181818";
+    }
+
+    function symbolForNumber(number) {
+      return SYMBOLS[(number - 1) % SYMBOLS.length];
+    }
+
+    function symbolModeLabel(mode) {
+      if (mode === "symbol") return "記号";
+      if (mode === "both") return "数字 + 記号";
+      return "数字";
+    }
+
+    function openPrintView() {
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) return;
+
+      const title = escapeHtml(chartTitleInput.value || "Cross Stitch Chart");
+      const imgData = canvas.toDataURL("image/png");
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="ja">
+        <head>
+          <meta charset="UTF-8">
+          <title>${title}</title>
+          <style>
+            body { margin: 0; padding: 18px; font-family: "Yu Gothic UI", sans-serif; background: #fff; }
+            h1 { margin: 0 0 14px; font-size: 20px; }
+            img { width: 100%; height: auto; display: block; }
+            @page { size: auto; margin: 10mm; }
+          </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          <img src="${imgData}" alt="cross stitch chart">
+          <script>
+            window.onload = () => {
+              setTimeout(() => window.print(), 150);
+            };
+          <\/script>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function buildThreadMatches(stitchColors, threadBrand) {
+      const results = new Map();
+      if (threadBrand === "none") return results;
+
+      const brands = threadBrand === "both" ? ["DMC", "COSMO"] : [threadBrand];
+      stitchColors.forEach((color) => {
+        const brandMatches = brands
+          .map((brand) => nearestThreadLabels(color, brand, 3))
+          .filter((entry) => entry.length > 0);
+        results.set(color.join(","), {
+          inline: formatThreadMatchesInline(brandMatches),
+          detail: formatThreadMatchesDetail(brandMatches),
+        });
+      });
+      return results;
+    }
+
+    function nearestThreadLabels(color, brand, limit = 3) {
+      const table = THREAD_TABLES[brand];
+      if (!table || !table.length) return [];
+
+      return table
+        .map((thread) => ({
+          ...thread,
+          distance: rgbDistance(color, thread.rgb),
+        }))
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, limit);
+    }
+
+    function rgbDistance(color, threadRgb) {
+      const dr = color[0] - threadRgb[0];
+      const dg = color[1] - threadRgb[1];
+      const db = color[2] - threadRgb[2];
+      return (dr * dr) + (dg * dg) + (db * db);
+    }
+
+    function drawRoundedRect(context, x, y, width, height, radius, fillStyle, strokeStyle = "") {
+      context.beginPath();
+      context.moveTo(x + radius, y);
+      context.arcTo(x + width, y, x + width, y + height, radius);
+      context.arcTo(x + width, y + height, x, y + height, radius);
+      context.arcTo(x, y + height, x, y, radius);
+      context.arcTo(x, y, x + width, y, radius);
+      context.closePath();
+      context.fillStyle = fillStyle;
+      context.fill();
+      if (strokeStyle) {
+        context.strokeStyle = strokeStyle;
+        context.lineWidth = 1;
+        context.stroke();
+      }
+    }
+
+    function formatThreadMatchesInline(brandMatches) {
+      return brandMatches
+        .map((matches) => `${matches[0].brand}: ${matches.map((match) => match.number).join(" / ")}`)
+        .join(" | ");
+    }
+
+    function formatThreadMatchesDetail(brandMatches) {
+      return brandMatches
+        .map((matches) => {
+          const brand = matches[0].brand;
+          const items = matches.map((match) => {
+            const suffix = match.name ? ` ${match.name}` : "";
+            return `${match.number}${suffix}`;
+          });
+          return `${brand}: ${items.join(" / ")}`;
+        })
+        .join(" | ");
+    }
+  </script>
+</body>
+</html>
